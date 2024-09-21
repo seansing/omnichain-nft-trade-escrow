@@ -1,6 +1,5 @@
 import type { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox-viem";
-import "./tasks/omnichainNFTTradeEscrow";
 
 require("dotenv").config();
 

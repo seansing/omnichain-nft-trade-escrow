@@ -5,6 +5,7 @@ import { OApp, Origin, MessagingFee } from "@layerzerolabs/lz-evm-oapp-v2/contra
 import { OptionsBuilder } from "@layerzerolabs/lz-evm-oapp-v2/contracts/oapp/libs/OptionsBuilder.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "hardhat/console.sol";
 
 contract NFTTradeEscrow is OApp {
     using OptionsBuilder for bytes;
@@ -129,15 +130,6 @@ contract NFTTradeEscrow is OApp {
         emit TradeFulfilled(msg.sender, trade.user2);
     }
 
-    function withdrawNFT(address _user) public {
-        Trade storage trade = trades[_user];
-        require(trade.isFulfilled, "Trade is not fulfilled yet");
-
-        IERC721(trade.nft2).transferFrom(address(this), trade.user1, trade.tokenId2);
-
-        delete trades[_user];
-    }
-
     function _lzReceive(
         Origin calldata _origin,
         bytes32 _guid,
@@ -145,6 +137,7 @@ contract NFTTradeEscrow is OApp {
         address,
         bytes calldata
     ) internal override {
+
         (uint8 messageType, bytes memory messageData) = abi.decode(_payload, (uint8, bytes));
 
         if (messageType == uint8(MessageType.InterestToTrade)) {
@@ -160,12 +153,14 @@ contract NFTTradeEscrow is OApp {
 
     function _handleInterestToTrade(bytes memory messageData) internal {
         (address user1, address nft1, uint256 tokenId1, address nftDesired, uint256 tokenIdDesired) = abi.decode(messageData, (address, address, uint256, address, uint256));
+        console.log("Interest to trade on contract");
         trades[user1] = Trade(user1, address(0), nft1, tokenId1, nftDesired, tokenIdDesired, false, false);
         emit TradeInterestInitiated(user1, nft1, tokenId1, nftDesired, tokenIdDesired);
     }
 
     function _handleReadyToTrade(bytes memory messageData) internal {
         (address user2, address nft2, uint256 tokenId2, address user1) = abi.decode(messageData, (address, address, uint256, address));
+        console.log(user1);
         trades[user1].user2 = user2;
         trades[user1].nft2 = nft2;
         trades[user1].tokenId2 = tokenId2;
