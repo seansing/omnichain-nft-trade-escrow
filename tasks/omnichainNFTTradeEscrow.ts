@@ -45,6 +45,27 @@ task(
 
 });
 
+task(
+    "approveTransfer",
+    "Approve token transfer for given token id",
+)
+.addParam("nftaddress", "Address of the NFT contract")
+.addParam("tokenid", "Token id to approve transfer for")
+.setAction(async (taskArgs) => {
+
+    const factory = await hre.viem.getContractAt(
+        "ETHGlobalSGNFT",
+        taskArgs.nftaddress,
+      );
+      const hash = await factory.write.approve([taskArgs.nftaddress, taskArgs.tokenid]);
+  
+      const publicClient = await hre.viem.getPublicClient();
+      const txReceipt = await publicClient.waitForTransactionReceipt({ hash });
+  
+      console.log("Approved!");
+
+});
+
 
 task(
   "nftTradeEscrowSetPeer",
@@ -76,10 +97,35 @@ task(
 
     console.log("Set peer successful!");
   });
+  
+task(
+    "quoteInterestToTrade",
+    "Get price to send an interest to trade message",
+)
+.addParam("eid", "Layer Zero endpoint id for target chain")
+.addParam(
+  "currentcontract",
+  "The NFT Trade Escrow contract on the current chain",
+)
+.addParam("tokenowner", "Token owner")
+.addParam("tokenid", "Token id to trade")
+.addParam("nftaddress", "NFT's address")
+.addParam("tokeniddesired", "Token id desired")
+.addParam("nftaddressdesired", "Address of nft desired")
+.setAction(async (taskArgs) => {
+
+    const factory = await hre.viem.getContractAt(
+      "ETHGlobalSGNFT",
+      taskArgs.nftaddress,
+    );
+    const owner = await factory.read.quoteInterestToTrade([taskArgs.eid, taskArgs.nftaddress, taskArgs.tokenid, taskArgs.nftaddressdesired, taskArgs.tokeniddesired, "0x0003010011010000000000000000000000000000ea60"]);
+
+    console.log("Owner of token id: ", owner);
+});
 
   task(
-    "initiateTrade",
-    "Initiates a trade on the NFT Trade Escrow contract",
+    "interestToTrade",
+    "Initiates an interest to trade on the NFT Trade Escrow contract",
   )
     .addParam("eid", "Layer Zero endpoint id for target chain")
     .addParam(
@@ -90,6 +136,7 @@ task(
     .addParam("nftaddress", "NFT's address")
     .addParam("tokeniddesired", "Token id desired")
     .addParam("nftaddressdesired", "Address of nft desired")
+    .addParam("gasinwei", "Gas in wei for message sending")
     .setAction(async (taskArgs) => {
       const eid = taskArgs.eid;
       let peerContract = taskArgs.peercontract;
@@ -102,11 +149,37 @@ task(
         "NFTTradeEscrow",
         taskArgs.currentcontract,
       );
-      const hash = await factory.write.setPeer([eid, peerContract]);
+      const hash = await factory.write.initiateTrade([taskArgs.eid, taskArgs.nftaddress, taskArgs.tokenid, taskArgs.nftaddressdesire, taskArgs.tokeniddesired, taskArgs.gasinwei]);
       const txReceipt = await publicClient.waitForTransactionReceipt({ hash });
   
       console.log("Set peer successful!");
     }); 
+
+    task(
+        "quoteReadyToTrade",
+        "Get price to send an interest to trade message",
+    )
+    .addParam("eid", "Layer Zero endpoint id for target chain")
+    .addParam(
+      "currentcontract",
+      "The NFT Trade Escrow contract on the current chain",
+    )
+    .addParam("tokenowner", "Token owner")
+    .addParam("tokenid", "Token id to trade")
+    .addParam("nftaddress", "NFT's address")
+    .addParam("tokeniddesired", "Token id desired")
+    .addParam("nftaddressdesired", "Address of nft desired")
+    .setAction(async (taskArgs) => {
+    
+        const factory = await hre.viem.getContractAt(
+          "ETHGlobalSGNFT",
+          taskArgs.nftaddress,
+        );
+        const owner = await factory.read.quoteInterestToTrade([taskArgs.eid, taskArgs.nftaddress, taskArgs.tokenid, taskArgs.nftaddressdesired, taskArgs.tokeniddesired, "0x0003010011010000000000000000000000000000ea60"]);
+    
+        console.log("Owner of token id: ", owner);
+    });
+
 
 function padding(addressToPad) {
   // Format it to bytes32

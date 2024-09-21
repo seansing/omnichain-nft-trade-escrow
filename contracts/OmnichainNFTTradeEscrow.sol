@@ -27,6 +27,8 @@ contract NFTTradeEscrow is OApp {
         bool isFulfilled;
     }
 
+    // Map a single user to his active trade
+    // Pattern can be improved to allow multiple trades per user
     mapping(address => Trade) public trades;
 
     event TradeInterestInitiated(address indexed user1, address indexed nft1, uint256 tokenId1, address nftDesired, uint256 tokenIdDesired);
@@ -183,19 +185,18 @@ contract NFTTradeEscrow is OApp {
     // Gas quote for InterestToTrade
     function quoteInterestToTrade(
         uint32 _dstEid, 
-        address _owner, 
         address _nftForTrade, 
         uint256 _tokenIdForTrade, 
         address _nftDesired, 
         uint256 _tokenIdDesired, 
         bytes calldata _options
     ) external view returns (uint256 nativeFee, uint256 lzTokenFee) {
-        bytes memory messageData = abi.encode(_owner, _nftForTrade, _tokenIdForTrade, _nftDesired, _tokenIdDesired);
+        bytes memory messageData = abi.encode(msg.sender, _nftForTrade, _tokenIdForTrade, _nftDesired, _tokenIdDesired);
         return quote(_dstEid, uint8(MessageType.InterestToTrade), messageData, _options, false);
     }
 
     // Gas quote for LockInInterest
-    function quoteLockInInterest(
+    function quoteReadyToTrade(
         uint32 _dstEid, 
         address _nft2, 
         uint256 _tokenId2, 
@@ -220,7 +221,7 @@ contract NFTTradeEscrow is OApp {
     /// @dev Quotes the gas needed to pay for the full omnichain transaction.
     /// @param _dstEid Destination chain's endpoint ID.
     /// @param _messageType Message type
-    /// @param _messageData Smart wallet address
+    /// @param _messageData Message data
     /// @param _options Message execution options (e.g., for sending gas to destination).
     /// @param _payInLzToken To pay in LZ token or not
     /// @return nativeFee Estimated gas fee in native gas.
