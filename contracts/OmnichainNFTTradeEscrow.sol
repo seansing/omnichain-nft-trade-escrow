@@ -53,11 +53,11 @@ contract NFTTradeEscrow is OApp {
 
         bytes memory _payload = abi.encode(
             uint8(MessageType.InterestToTrade), 
-            msg.sender, 
+            abi.encode(msg.sender, 
             _nftForTrade, 
             _tokenIdForTrade, 
             _nftDesired, 
-            _tokenIdDesired
+            _tokenIdDesired)
         );
 
         _lzSend(
@@ -87,12 +87,11 @@ contract NFTTradeEscrow is OApp {
 
         bytes memory _payload = abi.encode(
             uint8(MessageType.ReadyToTrade), 
-            msg.sender, 
+            abi.encode(msg.sender, 
             _nft2, 
             _tokenId2, 
-            _user1
+            _user1)
         );
-
         _lzSend(
             _sourceChainEID,
             _payload,
@@ -113,8 +112,8 @@ contract NFTTradeEscrow is OApp {
 
         bytes memory _payload = abi.encode(
             uint8(MessageType.TradeFulfilled), 
-            msg.sender, 
-            trade.user2
+            abi.encode(msg.sender, 
+            trade.user2)
         );
 
         _lzSend(
@@ -137,7 +136,6 @@ contract NFTTradeEscrow is OApp {
         address,
         bytes calldata
     ) internal override {
-
         (uint8 messageType, bytes memory messageData) = abi.decode(_payload, (uint8, bytes));
 
         if (messageType == uint8(MessageType.InterestToTrade)) {
@@ -152,15 +150,15 @@ contract NFTTradeEscrow is OApp {
     }
 
     function _handleInterestToTrade(bytes memory messageData) internal {
+
         (address user1, address nft1, uint256 tokenId1, address nftDesired, uint256 tokenIdDesired) = abi.decode(messageData, (address, address, uint256, address, uint256));
-        console.log("Interest to trade on contract");
+
         trades[user1] = Trade(user1, address(0), nft1, tokenId1, nftDesired, tokenIdDesired, false, false);
         emit TradeInterestInitiated(user1, nft1, tokenId1, nftDesired, tokenIdDesired);
     }
 
     function _handleReadyToTrade(bytes memory messageData) internal {
         (address user2, address nft2, uint256 tokenId2, address user1) = abi.decode(messageData, (address, address, uint256, address));
-        console.log(user1);
         trades[user1].user2 = user2;
         trades[user1].nft2 = nft2;
         trades[user1].tokenId2 = tokenId2;

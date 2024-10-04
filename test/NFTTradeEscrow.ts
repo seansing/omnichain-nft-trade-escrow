@@ -170,10 +170,10 @@ import {
           });
       
           // Check if User2 is the new owner of NFT1's token 0
-          expect(ownerOfNFT1Token0).to.equal(otherAccount2.account.address);
+          expect(ownerOfNFT1Token0.toLowerCase()).to.equal(otherAccount2.account.address);
       
           // Check if User1 is the new owner of NFT2's token 1
-          expect(ownerOfNFT2Token1).to.equal(otherAccount1.account.address);
+          expect(ownerOfNFT2Token1.toLowerCase()).to.equal(otherAccount1.account.address);
         });
       });      
 
